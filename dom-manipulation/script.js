@@ -60,18 +60,6 @@ function addQuote() {
   alert("Quote added successfully!");
 }
 
-function exportQuotes() {
-  const dataStr = JSON.stringify(quotes, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "quotes.json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(event) {
@@ -97,6 +85,18 @@ importInput.id = "importFile";
 importInput.accept = ".json";
 importInput.onchange = importFromJsonFile;
 document.body.appendChild(importInput);
+
+function exportQuotes() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 const exportButton = document.createElement("button");
 exportButton.textContent = "Export Quotes";
