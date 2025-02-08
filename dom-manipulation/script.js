@@ -77,6 +77,7 @@ async function postQuoteToServer(quote) {
 async function syncQuotes() {
   await fetchQuotesFromServer();
   quotes.forEach(postQuoteToServer);
+  console.log("Quotes synced with server!");
 }
 
 setInterval(syncQuotes, 30000);
