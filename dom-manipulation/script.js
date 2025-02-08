@@ -1,14 +1,19 @@
-const quotes = [
+const quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "Do what you can, with what you have, where you are.", category: "Inspiration" },
   { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Perseverance" }
 ];
+
+function saveQuotes() {
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+}
 
 function showRandomQuote() {
   const quoteDisplay = document.getElementById("quoteDisplay");
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const quote = quotes[randomIndex];
   quoteDisplay.innerHTML = `<p>"${quote.text}"</p><p><strong>Category:</strong> ${quote.category}</p>`;
+  sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
 }
 
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
@@ -49,10 +54,62 @@ function addQuote() {
   }
 
   quotes.push({ text: newQuoteText, category: newQuoteCategory });
+  saveQuotes();
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
   alert("Quote added successfully!");
 }
 
+function exportQuotes() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(event) {
+    try {
+      const importedQuotes = JSON.parse(event.target.result);
+      if (Array.isArray(importedQuotes)) {
+        quotes.push(...importedQuotes);
+        saveQuotes();
+        alert("Quotes imported successfully!");
+      } else {
+        alert("Invalid file format. Please upload a valid JSON file.");
+      }
+    } catch (error) {
+      alert("Error reading file. Please try again.");
+    }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+const importInput = document.createElement("input");
+importInput.type = "file";
+importInput.id = "importFile";
+importInput.accept = ".json";
+importInput.onchange = importFromJsonFile;
+document.body.appendChild(importInput);
+
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export Quotes";
+exportButton.addEventListener("click", exportQuotes);
+document.body.appendChild(exportButton);
+
 // Initialize with a random quote on page load
-window.onload = showRandomQuote;
+window.onload = function() {
+  const lastViewedQuote = JSON.parse(sessionStorage.getItem("lastViewedQuote"));
+  if (lastViewedQuote) {
+    const quoteDisplay = document.getElementById("quoteDisplay");
+    quoteDisplay.innerHTML = `<p>"${lastViewedQuote.text}"</p><p><strong>Category:</strong> ${lastViewedQuote.category}</p>`;
+  } else {
+    showRandomQuote();
+  }
+};
