@@ -1,4 +1,3 @@
-
 const quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "Do what you can, with what you have, where you are.", category: "Inspiration" },
@@ -45,40 +44,41 @@ function createAddQuoteForm() {
 
 createAddQuoteForm();
 
-function fetchQuotesFromServer() {
+async function fetchQuotesFromServer() {
   try {
-    fetch("https://jsonplaceholder.typicode.com/posts")
-      .then(response => response.json())
-      .then(data => {
-        const newQuotes = data.slice(0, 5).map(post => ({ text: post.title, category: "Server" }));
-        quotes.push(...newQuotes);
-        saveQuotes();
-        populateCategories();
-        alert("New quotes fetched from server!");
-      });
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const data = await response.json();
+    const newQuotes = data.slice(0, 5).map(post => ({ text: post.title, category: "Server" }));
+    quotes.push(...newQuotes);
+    saveQuotes();
+    populateCategories();
+    alert("New quotes fetched from server!");
   } catch (error) {
     console.error("Error fetching quotes:", error);
   }
 }
 
-function postQuoteToServer(quote) {
-  fetch("https://jsonplaceholder.typicode.com/posts", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(quote)
-  })
-  .then(response => response.json())
-  .then(data => console.log("Quote posted to server:", data))
-  .catch(error => console.error("Error posting quote:", error));
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
+    const data = await response.json();
+    console.log("Quote posted to server:", data);
+  } catch (error) {
+    console.error("Error posting quote:", error);
+  }
 }
 
 setInterval(fetchQuotesFromServer, 30000);
 
 // Initialize on page load
-window.onload = function() {
-  fetchQuotesFromServer();
+window.onload = async function() {
+  await fetchQuotesFromServer();
   populateCategories();
   const lastViewedQuote = JSON.parse(sessionStorage.getItem("lastViewedQuote"));
   if (lastViewedQuote) {
