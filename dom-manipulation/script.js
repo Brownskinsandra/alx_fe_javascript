@@ -1,3 +1,4 @@
+
 const quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "Do what you can, with what you have, where you are.", category: "Inspiration" },
@@ -44,114 +45,40 @@ function createAddQuoteForm() {
 
 createAddQuoteForm();
 
-function populateCategories() {
-  const categoryFilter = document.getElementById("categoryFilter");
-  categoryFilter.innerHTML = '<option value="all">All Categories</option>';
-  const categories = [...new Set(quotes.map(quote => quote.category))];
-  categories.forEach(category => {
-    const option = document.createElement("option");
-    option.value = category;
-    option.textContent = category;
-    categoryFilter.appendChild(option);
-  });
-  
-  const lastSelectedCategory = localStorage.getItem("selectedCategory") || "all";
-  categoryFilter.value = lastSelectedCategory;
-}
-
-function filterQuotes() {
-  const selectedCategory = document.getElementById("categoryFilter").value;
-  localStorage.setItem("selectedCategory", selectedCategory);
-  
-  const filteredQuotes = selectedCategory === "all" 
-    ? quotes 
-    : quotes.filter(quote => quote.category === selectedCategory);
-  
-  const quoteDisplay = document.getElementById("quoteDisplay");
-  quoteDisplay.innerHTML = filteredQuotes.map(quote => `<p>"${quote.text}"</p><p><strong>Category:</strong> ${quote.category}</p>`).join("<hr>");
-}
-
-document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
-
-function addQuote() {
-  const newQuoteText = document.getElementById("newQuoteText").value.trim();
-  const newQuoteCategory = document.getElementById("newQuoteCategory").value.trim();
-  
-  if (newQuoteText === "" || newQuoteCategory === "") {
-    alert("Please enter both a quote and a category.");
-    return;
-  }
-
-  quotes.push({ text: newQuoteText, category: newQuoteCategory });
-  saveQuotes();
-  populateCategories();
-  document.getElementById("newQuoteText").value = "";
-  document.getElementById("newQuoteCategory").value = "";
-  alert("Quote added successfully!");
-}
-
-function importFromJsonFile(event) {
-  const fileReader = new FileReader();
-  fileReader.onload = function(event) {
-    try {
-      const importedQuotes = JSON.parse(event.target.result);
-      if (Array.isArray(importedQuotes)) {
-        quotes.push(...importedQuotes);
+function fetchQuotesFromServer() {
+  try {
+    fetch("https://jsonplaceholder.typicode.com/posts")
+      .then(response => response.json())
+      .then(data => {
+        const newQuotes = data.slice(0, 5).map(post => ({ text: post.title, category: "Server" }));
+        quotes.push(...newQuotes);
         saveQuotes();
         populateCategories();
-        alert("Quotes imported successfully!");
-      } else {
-        alert("Invalid file format. Please upload a valid JSON file.");
-      }
-    } catch (error) {
-      alert("Error reading file. Please try again.");
-    }
-  };
-  fileReader.readAsText(event.target.files[0]);
-}
-
-const importInput = document.createElement("input");
-importInput.type = "file";
-importInput.id = "importFile";
-importInput.accept = ".json";
-importInput.onchange = importFromJsonFile;
-document.body.appendChild(importInput);
-
-function exportQuotes() {
-  const dataStr = JSON.stringify(quotes, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "quotes.json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-const exportButton = document.createElement("button");
-exportButton.textContent = "Export Quotes";
-exportButton.addEventListener("click", exportQuotes);
-document.body.appendChild(exportButton);
-
-async function fetchQuotesFromServer() {
-  try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-    const data = await response.json();
-    const newQuotes = data.slice(0, 5).map(post => ({ text: post.title, category: "Server" }));
-    quotes.push(...newQuotes);
-    saveQuotes();
-    populateCategories();
-    alert("New quotes fetched from server!");
+        alert("New quotes fetched from server!");
+      });
   } catch (error) {
     console.error("Error fetching quotes:", error);
   }
 }
 
+function postQuoteToServer(quote) {
+  fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(quote)
+  })
+  .then(response => response.json())
+  .then(data => console.log("Quote posted to server:", data))
+  .catch(error => console.error("Error posting quote:", error));
+}
+
 setInterval(fetchQuotesFromServer, 30000);
 
-// Initialize with a random quote on page load
+// Initialize on page load
 window.onload = function() {
+  fetchQuotesFromServer();
   populateCategories();
   const lastViewedQuote = JSON.parse(sessionStorage.getItem("lastViewedQuote"));
   if (lastViewedQuote) {
