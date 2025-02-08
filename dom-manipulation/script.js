@@ -74,11 +74,16 @@ async function postQuoteToServer(quote) {
   }
 }
 
-setInterval(fetchQuotesFromServer, 30000);
+async function syncQuotes() {
+  await fetchQuotesFromServer();
+  quotes.forEach(postQuoteToServer);
+}
+
+setInterval(syncQuotes, 30000);
 
 // Initialize on page load
 window.onload = async function() {
-  await fetchQuotesFromServer();
+  await syncQuotes();
   populateCategories();
   const lastViewedQuote = JSON.parse(sessionStorage.getItem("lastViewedQuote"));
   if (lastViewedQuote) {
