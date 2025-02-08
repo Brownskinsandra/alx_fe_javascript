@@ -134,6 +134,22 @@ exportButton.textContent = "Export Quotes";
 exportButton.addEventListener("click", exportQuotes);
 document.body.appendChild(exportButton);
 
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const data = await response.json();
+    const newQuotes = data.slice(0, 5).map(post => ({ text: post.title, category: "Server" }));
+    quotes.push(...newQuotes);
+    saveQuotes();
+    populateCategories();
+    alert("New quotes fetched from server!");
+  } catch (error) {
+    console.error("Error fetching quotes:", error);
+  }
+}
+
+setInterval(fetchQuotesFromServer, 30000);
+
 // Initialize with a random quote on page load
 window.onload = function() {
   populateCategories();
